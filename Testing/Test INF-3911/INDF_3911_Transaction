@@ -1,0 +1,98 @@
+USE [QaTesting]
+GO
+
+ALTER PROCEDURE INDF_3911_Transaction
+as
+BEGIN
+
+    DECLARE
+        @LocalFunds TABLE
+                    (
+                        [MarketId]       INT NOT NULL,
+                        [DisbursementId] INT NOT NULL
+                    )
+
+    DECLARE
+        @HospitalInfo TABLE
+                      (
+                          [FundraisingEntityId] INT NOT NULL,
+                          [MarketId]            INT NOT NULL
+                      );
+    WITH [LocalFunds] ([MarketId], [DisbursementId])
+             AS
+             (
+                 -- only deal with non-partner funds (there are some partner funds from this period but they are not included in this update)
+                 SELECT mw.[MarketId], mf.[DisbursementId]
+                 FROM [EZPMR].[dbo].[MarketWorksheets] mw
+                          INNER JOIN [EZPMR].[dbo].[Selections] s ON [s].[WorksheetId] = [mw].[WorksheetId]
+                          INNER JOIN [EZPMR].[dbo].[Entries] e ON [e].[SelectionId] = [s].[SelectionId]
+                          INNER JOIN [EZPMR].[dbo].[MiscFunds] mf ON [mf].[EntryId] = [e].[EntryId]
+                 WHERE s.[FundingTypeId] = 9 -- Local
+                   AND mw.[Year] >= 2019     -- reporting years 2019 and forward
+                   AND mw.[Filed] = 1 -- pmr was submitted (creating disbursemnt records)
+             )
+    INSERT
+    INTO @LocalFunds ([MarketId], [DisbursementId])
+    SELECT [MarketId], [DisbursementId]
+    FROM [LocalFunds];
+    ;
+    WITH [HospitalInfo] ([FundraisingEntityId], [MarketId])
+             AS
+             (
+                 -- get the primary hospital for each market
+                 SELECT fe.[FundraisingEntityId], h.[MarketId]
+                 FROM [Core].[dbo].[FundraisingEntities] fe
+                          INNER JOIN [Core].[dbo].[Hospitals] h
+                                     ON [h].[FundraisingEntityId] = [fe].[FundraisingEntityId]
+                 WHERE [fe].[FundraisingCategoryId] = 10
+                   AND h.[PrimaryHospital] = 1 --Hospital Partners, Primary Hospital
+             )
+    INSERT
+    INTO @HospitalInfo ([FundraisingEntityId], [MarketId])
+    SELECT [FundraisingEntityId], [MarketId]
+    FROM [HospitalInfo];
+
+    /***************************
+      Tables created by QA to validate the data
+     */
+      IF OBJECT_ID('LocalFundsQA') IS NOT NULL DROP TABLE LocalFundsQA;
+       IF OBJECT_ID('HospitalInfoQA') IS NOT NULL DROP TABLE HospitalInfoQA;
+       CREATE TABLE
+        LocalFundsQA
+                    (
+                        [MarketId]       INT NOT NULL,
+                        [DisbursementId] INT NOT NULL
+                    )
+
+    CREATE TABLE
+        HospitalInfoQA
+                      (
+                          [FundraisingEntityId] INT NOT NULL,
+                          [MarketId]            INT NOT NULL
+                      );
+
+    INSERT INTO LocalFundsQA
+    SELECT *
+    FROM @LocalFunds
+
+    INSERT INTO HospitalInfoQA
+    SELECT *
+    FROM @HospitalInfo
+
+    /**********Update Disbursements with new primary hospital**********/
+    --SELECT hi.[FundraisingEntityId] AS [HospitalFundraisingEntityId], d.[FundraisingEntityId] AS [DisbursementFundraisingEntityId]
+    UPDATE d
+    SET [FundraisingEntityId] = hi.[FundraisingEntityId]
+    FROM @LocalFunds lf
+             INNER JOIN @HospitalInfo hi ON [hi].[MarketId] = [lf].[MarketId]
+             INNER JOIN [Core].[dbo].[Disbursements] d ON [d].[DisbursementId] = [lf].[DisbursementId];
+
+    /**********Update DisbursementFundraisingentities with new primary hospital***********/
+    --SELECT hi.[FundraisingEntityId] AS [HospitalFundraisingEntityId], d.[FundraisingEntityId] AS [DisbursementFundraisingEntityId]
+    UPDATE d
+    SET d.[FundraisingEntityId] = hi.[FundraisingEntityId]
+    FROM @LocalFunds lf
+             INNER JOIN @HospitalInfo hi ON [hi].[MarketId] = [lf].[MarketId]
+             INNER JOIN [Core].[dbo].[DisbursementFundraisingEntities] d ON [d].[DisbursementId] = [lf].[DisbursementId]
+
+end

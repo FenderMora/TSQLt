@@ -1,0 +1,119 @@
+{ "$schema": 
+    {
+        "storedProcedureName": "[dbo].[spUpdateAddress]",
+        "storedProcedureParameters": {
+            "AddressId": {
+                "value": 632289,
+                "type": "Int32"
+            },
+            "Latitude": {
+                "value": 39.2774856,
+                "type": "Double"
+            },
+            "Longitude": {
+                "value": -76.6146112,
+                "type": "Double"
+            }
+        }
+    },
+    "$schema":  {
+        
+            "storedProcedureName": "[dbo].[spUpdateAddress]",
+            "storedProcedureParameters": {
+                "AddressId": {
+                    "value": 537014,
+                    "type": "Int32"
+                },
+                "Latitude": {
+                    "value": 39.2774856,
+                    "type": "Double"
+                },
+                "Longitude": {
+                    "value": -76.6146112,
+                    "type": "Double"
+                }
+            }
+        
+    },
+    "$schema":{
+        "pipeline": {
+            "referenceName": "SaveAddressToCache",
+            "type": "PipelineReference"
+        },
+        "waitOnCompletion": true,
+        "parameters": {
+            "AddressComponents": [
+                {
+                    "long_name": "201",
+                    "short_name": "201",
+                    "types": [
+                        "subpremise"
+                    ]
+                },
+                {
+                    "long_name": "101",
+                    "short_name": "101",
+                    "types": [
+                        "street_number"
+                    ]
+                },
+                {
+                    "long_name": "Main Street West",
+                    "short_name": "Main St W",
+                    "types": [
+                        "route"
+                    ]
+                },
+                {
+                    "long_name": "Ashland",
+                    "short_name": "Ashland",
+                    "types": [
+                        "locality",
+                        "political"
+                    ]
+                },
+                {
+                    "long_name": "Ashland County",
+                    "short_name": "Ashland County",
+                    "types": [
+                        "administrative_area_level_2",
+                        "political"
+                    ]
+                },
+                {
+                    "long_name": "Wisconsin",
+                    "short_name": "WI",
+                    "types": [
+                        "administrative_area_level_1",
+                        "political"
+                    ]
+                },
+                {
+                    "long_name": "United States",
+                    "short_name": "US",
+                    "types": [
+                        "country",
+                        "political"
+                    ]
+                },
+                {
+                    "long_name": "54806",
+                    "short_name": "54806",
+                    "types": [
+                        "postal_code"
+                    ]
+                },
+                {
+                    "long_name": "1668",
+                    "short_name": "1668",
+                    "types": [
+                        "postal_code_suffix"
+                    ]
+                }
+            ],
+            "AddressLookupMatchValue": "101 W Main Street #201 Ashland, Wisconsin 54806",
+            "Latitude": 46.591556,
+            "Longitude": -90.88363079999999
+        }
+    }
+}
